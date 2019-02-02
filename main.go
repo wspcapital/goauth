@@ -5,19 +5,19 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 )
 
-const clientID = "<your client id>"
-const clientSecret = "<your client secret>"
+const clientID = "1729e8ebab6944327671308fe14e518deb9a1bd9186eb4268a571efe64b03f8c"
+const clientSecret = "ca65630a8809f765712774bf86ebb530389e05c09f0c9f2547a501011caaed40"
 
 func main() {
-	fs := http.FileServer(http.Dir("public"))
-	http.Handle("/", fs)
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		getCodeBody := fmt.Sprintf("https://cloud.lightspeedapp.com/oauth/authorize.php?response_type=code&client_id=%s&scope=%s", clientID, "employee:inventory+employee:reports")
+		w.Header().Set("Location", getCodeBody)
+		w.WriteHeader(http.StatusFound)
+	})
 
-	// We will be using `httpClient` to make external HTTP requests later in our code
-	httpClient := http.Client{}
-
-	// Create a new redirect route route
 	http.HandleFunc("/oauth/redirect", func(w http.ResponseWriter, r *http.Request) {
 		// First, we need to get the value of the `code` query param
 		err := r.ParseForm()
@@ -27,20 +27,21 @@ func main() {
 		}
 		code := r.FormValue("code")
 
-		// Next, lets for the HTTP request to call the github oauth enpoint
-		// to get our access token
-		reqURL := fmt.Sprintf("https://github.com/login/oauth/access_token?client_id=%s&client_secret=%s&code=%s", clientID, clientSecret, code)
-		req, err := http.NewRequest(http.MethodPost, reqURL, nil)
+		fmt.Println(code)
+
+		body := strings.NewReader(fmt.Sprintf(`client_id=%s&client_secret=%s&code=%s&grant_type=authorization_code`, clientID, clientSecret, code))
+
+		req, err := http.NewRequest("POST", "https://cloud.lightspeedapp.com/oauth/access_token.php", body)
+
 		if err != nil {
 			fmt.Fprintf(os.Stdout, "could not create HTTP request: %v", err)
 			w.WriteHeader(http.StatusBadRequest)
 		}
-		// We set this header since we want the response
-		// as JSON
-		req.Header.Set("accept", "application/json")
+
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 		// Send out the HTTP request
-		res, err := httpClient.Do(req)
+		res, err := http.DefaultClient.Do(req)
 		if err != nil {
 			fmt.Fprintf(os.Stdout, "could not send HTTP request: %v", err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -56,13 +57,17 @@ func main() {
 
 		// Finally, send a response to redirect the user to the "welcome" page
 		// with the access token
-		w.Header().Set("Location", "/welcome.html?access_token="+t.AccessToken)
-		w.WriteHeader(http.StatusFound)
+		//w.Header().Set("Location", "/welcome.html?access_token="+t.AccessToken)
+		//w.WriteHeader(http.StatusFound)
 	})
 
-	http.ListenAndServe(":8080", nil)
+	http.ListenAndServe(":8888", nil)
 }
 
 type OAuthAccessResponse struct {
 	AccessToken string `json:"access_token"`
+	ExpiresIn int `json:"expires_in"`
+	RefreshToken string `json:"refresh_token"`
+	TokenType string `json:"token_type"`
+	Scope string `json:"scope"`
 }
