@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"strings"
 	"time"
+	"github.com/thedevsaddam/renderer"
 )
 
 const clientID = "1729e8ebab6944327671308fe14e518deb9a1bd9186eb4268a571efe64b03f8c"
@@ -82,6 +83,7 @@ type AccountParams struct {
 var t OAuthAccessResponse
 var acc AccountParams
 var expiredTime int32
+var rnd *renderer.Render
 
 func getToken(w http.ResponseWriter, r *http.Request) {
 
@@ -128,6 +130,8 @@ func getOauth(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("t.AccessToken ", t.AccessToken)
 
 	expiredTime = int32(time.Now().Unix()) + t.ExpiresIn
+
+	/*------------------------------------------------GET AccessID------------------------------------------------*/
 
 	req_acc, err := http.NewRequest("GET", "https://api.lightspeedapp.com/API/Account.json", nil)
 	if err != nil {
@@ -217,6 +221,8 @@ func getSales(w http.ResponseWriter, r *http.Request)  {
 	}
 
 	fmt.Println("Sale ", len(sale.Sale))
+
+	rnd.HTML(w, http.StatusOK, "index", sale.Sale)
 }
 
 func main() {
@@ -227,4 +233,9 @@ func main() {
 	http.ListenAndServe(":8888", nil)
 }
 
-
+func init() {
+	opts := renderer.Options{
+		ParseGlobPattern: "./public/*.html",
+	}
+	rnd = renderer.New(opts)
+}
