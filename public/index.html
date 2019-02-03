@@ -47,3 +47,8 @@ if err != nil {
 defer resp.Body.Close()
 
 curl -d 'client_id=1729e8ebab6944327671308fe14e518deb9a1bd9186eb4268a571efe64b03f8c&client_secret=ca65630a8809f765712774bf86ebb530389e05c09f0c9f2547a501011caaed40&code=330f4ec4af4474c6749a7727f817cbf90ef5e8dc&grant_type=authorization_code' https://cloud.lightspeedapp.com/oauth/access_token.php
+
+
+
+
+$ curl -H "Authorization: Bearer b304b38a4230531547ad4037a7bae51ddf2363ab" "https://api.lightspeedapp.com/API/Account.json"
