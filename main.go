@@ -107,12 +107,50 @@ func getToken() {
 
 func refreshToken() {
 
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		// First, we need to get the value of the `code` query param
+		err := r.ParseForm()
+		if err != nil {
+			fmt.Fprintf(os.Stdout, "could not parse query: %v", err)
+			w.WriteHeader(http.StatusBadRequest)
+		}
+
+		body := strings.NewReader(fmt.Sprintf(`refresh_token=%s&client_secret=%s&client_id=%s&grant_type=refresh_token`, t.RefreshToken, clientSecret, clientID))
+
+		req, err := http.NewRequest("POST", "https://cloud.lightspeedapp.com/oauth/access_token.php", body)
+
+		if err != nil {
+			fmt.Fprintf(os.Stdout, "could not create HTTP request: %v", err)
+			w.WriteHeader(http.StatusBadRequest)
+		}
+
+		// Send out the HTTP request
+		res, err := http.DefaultClient.Do(req)
+		if err != nil {
+			fmt.Fprintf(os.Stdout, "could not send HTTP request: %v", err)
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		defer res.Body.Close()
+
+		if err := json.NewDecoder(res.Body).Decode(&rt); err != nil {
+			fmt.Fprintf(os.Stdout, "could not parse JSON response: %v", err)
+			w.WriteHeader(http.StatusBadRequest)
+		}
+		fmt.Println("rt.AccessToken ", rt.AccessToken)
+	})
 }
 
 type OAuthAccessResponse struct {
 	AccessToken string `json:"access_token"`
 	ExpiresIn int32 `json:"expires_in"`
 	RefreshToken string `json:"refresh_token"`
+	TokenType string `json:"token_type"`
+	Scope string `json:"scope"`
+}
+
+type OAuthRefreshResponse struct {
+	AccessToken string `json:"access_token"`
+	ExpiresIn int32 `json:"expires_in"`
 	TokenType string `json:"token_type"`
 	Scope string `json:"scope"`
 }
@@ -147,6 +185,7 @@ type SaleStruct struct {
 }
 
 var t OAuthAccessResponse
+var rt OAuthRefreshResponse
 var acc AccountParams
 var expiredTime int32
 var s SaleStruct
