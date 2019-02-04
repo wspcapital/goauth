@@ -230,7 +230,7 @@ func main() {
 	http.HandleFunc("/auth", getToken)
 	http.HandleFunc("/oauth/redirect", getOauth)
 
-	http.ListenAndServe("https//:8888", nil)
+	http.ListenAndServe(":8888", nil)
 }
 
 func init() {
