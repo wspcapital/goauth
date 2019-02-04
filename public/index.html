@@ -7,12 +7,39 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <title>Node oAuth2 Example</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <!-- <link rel="stylesheet" type="text/css" media="screen" href="main.css" /> -->
-        <!-- <script src="main.js"></script> -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 </head>
 
 <body>
-<h1>{{ .AccessToken }}</h1>
+        <table></table>
+        <script type="text/javascript">
+            $(function () {
+                var jsonSale = {{ .Sale }};
+
+                if ( jsonSale != "" ) {
+                    arrSale = jQuery.parseJSON( jsonSale );
+                    if (arrSale.length > 0)
+                    var saleHeader = '';
+
+                    arrSale.forEach(function(itemRow, iR, arrSale){
+                        saleRow = '<td>' + iR + '</td>';
+
+                        initHeader = '<th>N</th>';
+
+                        itemRow.forEach(function(item, i, itemRow){
+                            saleRow += '<td>' + item + '</td>';
+                            initHeader += '<th>' + i + '</th>';
+                        });
+                        saleHeader = initHeader;
+                        if (saleHeader == '') {
+                            saleHeader = '<tr>' + initHeader + '</tr>';
+                            $(table).appendChild(saleHeader);
+                        }
+                        $(table).appendChild('<tr>' + saleRow + '</tr>');
+                    })
+                }
+            })
+        </script>
 </body>
 
 </html>

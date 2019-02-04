@@ -222,7 +222,7 @@ func getSales(w http.ResponseWriter, r *http.Request)  {
 
 	fmt.Println("Sale ", len(sale.Sale))
 
-	rnd.HTML(w, http.StatusOK, "index", t.AccessToken)
+	rnd.HTML(w, http.StatusOK, "index", sale)
 }
 
 func main() {
